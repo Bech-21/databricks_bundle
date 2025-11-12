@@ -1,5 +1,35 @@
 name: CD
-
+# automates the deployment of Databricks asset bundles to production environment on pushes to main branch.
 on:
   push:
     branches: [ main ]  
+
+
+jobs:
+  prod:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.13"
+
+        # Install dbt
+      # ------------------------
+      - name: Install dependencies
+        run: |
+          pip install poetry
+
+      - name: installing databricks CLI
+        uses: databricks/setup-cli@main
+      - name: deploy to databricks
+        env:
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+          DATABRICKS_HOST: https://dbc-fd4c8a5f-6584.cloud.databricks.com/
+          DATABRICKS_BUNDLE_ENV: dev
+        run: |
+          databricks bundle validate --target prod
+          databricks bundle deploy --target prod
