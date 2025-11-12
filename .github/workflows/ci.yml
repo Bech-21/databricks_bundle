@@ -1,6 +1,5 @@
 name: CI/CD Pipeline
 
-# updating cicd
 on:
   push:
     branches: [ main, dev, UAT ]
@@ -8,20 +7,11 @@ on:
     branches: [ main ]
 
 jobs:
-  cicd:
+  # Separate job for dev environment
+  deploy-dev:
+  
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        include:
-          - branch: dev
-            environment: dev
-          - branch: UAT
-            environment: uat
-          - branch: main
-            environment: prd
-    # Only run for the matching branch  our branchdd
-    if: github.ref == format('refs/heads/{0}', matrix.branch)
-    environment: databricks_${{ matrix.environment }}
+    environment: databricks_dev
     
     steps:
       - uses: actions/checkout@v4
@@ -41,7 +31,7 @@ jobs:
           echo "client_secret = $CLIENT_SECRET" >> ~/.databrickscfg
       
       - name: Validate Bundle
-        run: databricks bundle validate --target ${{ matrix.environment }} --profile azure-sp
+        run: databricks bundle validate --target dev
       
       - name: Deploy Bundle
-        run: databricks bundle deploy --target ${{ matrix.environment }} --profile azure-sp
+        run: databricks bundle deploy --target dev
