@@ -1,0 +1,20 @@
+resources:
+  pipelines:
+    pipeline_pl_earthquake_rig_data_dlt:
+      name: pl_earthquake_rig_data_dlt
+      configuration:
+        pipelines.pip.packages: reverse_geocoder
+      libraries:
+        - glob:
+            include: ../../src/pipelines/pl_earthquake_rig_data_dlt/transformations/**
+      schema: lakehouse
+      continuous: false
+      development: true
+      photon: true
+      channel: PREVIEW
+      catalog: earth_data
+      serverless: true
+      root_path: ../../src/pipelines/pl_earthquake_rig_data_dlt
+      environment:
+        dependencies:
+          - reverse_geocoder

@@ -1,0 +1,46 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, dev, UAT ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  cicd:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - branch: dev
+            environment: dev
+          - branch: UAT
+            environment: uat
+          - branch: main
+            environment: prd
+    # Only run for the matching branch  our branchdd
+    if: github.ref == format('refs/heads/{0}', matrix.branch)
+    environment: databricks_${{ matrix.environment }}
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install Databricks CLI
+        run: curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh
+      
+      - name: Setup Databricks Profile
+        env:
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+          CLIENT_ID: ${{ secrets.CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+        run: |
+          echo "[azure-sp]" > ~/.databrickscfg
+          echo "host = $DATABRICKS_HOST" >> ~/.databrickscfg
+          echo "client_id = $CLIENT_ID" >> ~/.databrickscfg
+          echo "client_secret = $CLIENT_SECRET" >> ~/.databrickscfg
+      
+      - name: Validate Bundle
+        run: databricks bundle validate --target ${{ matrix.environment }} --profile azure-sp
+      
+      - name: Deploy Bundle
+        run: databricks bundle deploy --target ${{ matrix.environment }} --profile azure-sp
