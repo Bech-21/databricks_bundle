@@ -1,5 +1,5 @@
-name: CI/CD Pipeline
-
+name: CI
+# This new addedworkflow automates the deployment of Databricks asset bundles to different environments based on the branch pushed to.
 on:
   push:
     branches: [ main, dev, UAT ]
@@ -7,40 +7,30 @@ on:
     branches: [ main ]
 
 jobs:
-  cicd:
+  deploy:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        include:
-          - branch: dev
-            environment: dev
-          - branch: UAT
-            environment: uat
-          - branch: main
-            environment: prd
-    # Only run for the matching branch  our branchdd
-    if: github.ref == format('refs/heads/{0}', matrix.branch)
-    environment: databricks_${{ matrix.environment }}
-    
+
     steps:
-      - uses: actions/checkout@v4
-      
-      - name: Install Databricks CLI
-        run: curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh
-      
-      - name: Setup Databricks Profile
-        env:
-          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
-          CLIENT_ID: ${{ secrets.CLIENT_ID }}
-          CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.13"
+
+        # Install dbt
+      # ------------------------
+      - name: Install dependencies
         run: |
-          echo "[azure-sp]" > ~/.databrickscfg
-          echo "host = $DATABRICKS_HOST" >> ~/.databrickscfg
-          echo "client_id = $CLIENT_ID" >> ~/.databrickscfg
-          echo "client_secret = $CLIENT_SECRET" >> ~/.databrickscfg
-      
-      - name: Validate Bundle
-        run: databricks bundle validate --target ${{ matrix.environment }} --profile azure-sp
-      
-      - name: Deploy Bundle
-        run: databricks bundle deploy --target ${{ matrix.environment }} --profile azure-sp
+          pip install poetry
+
+      - name: installing databricks CLI
+        uses: databricks/setup-cli@main
+      - name: deploy to databricks
+        env:
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+          DATABRICKS_HOST: https://dbc-fd4c8a5f-6584.cloud.databricks.com/
+          DATABRICKS_BUNDLE_ENV: dev
+        run: |
+          databricks bundle validate --target dev
+          databricks bundle deploy --target dev
