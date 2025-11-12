@@ -18,3 +18,24 @@ resources:
       environment:
         dependencies:
           - reverse_geocoder
+# Target-specific overrides
+targets:
+  dev:
+    resources:
+      pipelines:
+        pipeline_pl_earthquake_rig_data_dlt:
+          development: true
+          
+  uat:
+    resources:
+      pipelines:
+        pipeline_pl_earthquake_rig_data_dlt:
+          development: false
+          
+  prod:
+    mode: production
+    resources:
+      pipelines:
+        pipeline_pl_earthquake_rig_data_dlt:
+          development: false
+          name: pl_earthquake_rig_data_dlt_prod  
