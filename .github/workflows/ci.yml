@@ -1,4 +1,4 @@
-name: CI/CD_Pipeline
+name: CI
 # This new addedworkflow automates the deployment of Databricks asset bundles to different environments based on the branch pushed to.
 on:
   push:
