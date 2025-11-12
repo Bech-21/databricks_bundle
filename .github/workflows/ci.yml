@@ -7,7 +7,7 @@ on:
     branches: [ main ]
 
 jobs:
-  # Separate job for dev environment
+  # update host
   deploy-dev:
   
     runs-on: ubuntu-latest
